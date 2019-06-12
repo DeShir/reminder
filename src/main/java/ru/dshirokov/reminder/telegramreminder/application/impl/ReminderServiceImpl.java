@@ -57,7 +57,7 @@ public class ReminderServiceImpl implements ReminderService {
     public Mono<TextConvertible> list(Identifier identifier) {
         return eventRepository
                 .findAllByChatId(identifier.getChatId())
-                .map(event -> String.format("%s - %s \n %s \n", event.getTrigger().getTime(), event.getTitle(), event.getId()))
+                .map(event -> String.format("%s - %s\n%s\n", event.getTrigger().getTime(), event.getTitle(), event.getId()))
                 .collect(Collectors.toList()).map(ListTextResponse::new);
     }
 
