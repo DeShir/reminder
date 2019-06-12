@@ -50,7 +50,7 @@ public class ReminderServiceImpl implements ReminderService {
                 .then(eventRepository
                         .findAllByChatId(identifier.getChatId())
                         .map(event -> String.format("%s \n %s", event.getTitle(), event.getId()))
-                        .collect(Collectors.toList()).map(ListTextResponse::new));
+                        .collect(Collectors.toList()).doOnSuccess(list -> list.add("Идентификатор события?")).map(ListTextResponse::new));
     }
 
     @Override
@@ -71,7 +71,7 @@ public class ReminderServiceImpl implements ReminderService {
                         case ADD_EVENT_TRIGGER: return addEventTrigger(interaction, text);
                         case REMOVE_EVENT: return removeEvent(text);
                         case PENDING:
-                        default: return Mono.just(new SimpleTextResponse(String.format("Создать событие: %s", Command.ADD.literal())));
+                        default: return Mono.empty();
                     }
                 });
     }
@@ -81,6 +81,11 @@ public class ReminderServiceImpl implements ReminderService {
         return eventRepository.findAllBySuspendedIsFalse()
                 .filter(event -> shouldTrigger(event.getTrigger()))
                 .map(event -> new Alarm().setChatId(event.getChatId()).setMessage(new SimpleTextResponse(event.getTitle())));
+    }
+
+    @Override
+    public Mono<TextConvertible> help() {
+        return Mono.just(new SimpleTextResponse("Создать событие /add\nСписок событий /list\nУдалить событие /remove"));
     }
 
     private Mono<TextConvertible> addEventTitle(Interaction interaction, String text) {

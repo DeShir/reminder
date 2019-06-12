@@ -11,4 +11,5 @@ public interface ReminderService {
     Mono<TextConvertible> list(Identifier identifier);
     Mono<TextConvertible> receive(Identifier identifier, String text);
     Flux<Alarm> alarms();
+    Mono<TextConvertible> help();
 }

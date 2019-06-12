@@ -50,6 +50,10 @@ public class TelegramGate extends TelegramLongPollingBot {
                             reminderService.receive(identifier, message.getText())
                                     .map(TextConvertible::text).subscribe(respond(message.getChatId()), error());
                             break;
+                        case HELP:
+                            reminderService.help()
+                                    .map(TextConvertible::text).subscribe(respond(message.getChatId()), error());
+                            break;
                     }
                 }
             } else {

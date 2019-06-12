@@ -1,7 +1,7 @@
 package ru.dshirokov.reminder.telegramreminder.adapter.dto;
 
 public enum Command {
-    LIST("/list"), ADD("/add"), REMOVE("/remove"), UNDEFINED("");
+    UNDEFINED(""), LIST("/list"), ADD("/add"), REMOVE("/remove"), HELP("/help");
     private final String literal;
     Command(String literal) {
         this.literal = literal;
@@ -12,6 +12,7 @@ public enum Command {
             case "/list" : return LIST;
             case "/add" : return ADD;
             case "/remove" : return REMOVE;
+            case "/help" : return HELP;
             default: return UNDEFINED;
         }
     }
