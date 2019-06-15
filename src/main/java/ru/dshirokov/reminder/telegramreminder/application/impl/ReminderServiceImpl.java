@@ -5,7 +5,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import ru.dshirokov.reminder.telegramreminder.adapter.dto.Command;
 import ru.dshirokov.reminder.telegramreminder.application.ReminderService;
 import ru.dshirokov.reminder.telegramreminder.application.TextConvertible;
 import ru.dshirokov.reminder.telegramreminder.application.dto.Alarm;
@@ -19,7 +18,8 @@ import ru.dshirokov.reminder.telegramreminder.port.InteractionRepository;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-import static ru.dshirokov.reminder.telegramreminder.application.Triggers.*;
+import static ru.dshirokov.reminder.telegramreminder.application.Triggers.from;
+import static ru.dshirokov.reminder.telegramreminder.application.Triggers.shouldTrigger;
 import static ru.dshirokov.reminder.telegramreminder.application.dto.State.*;
 
 @Service
