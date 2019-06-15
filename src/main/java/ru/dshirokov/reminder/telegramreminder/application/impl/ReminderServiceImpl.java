@@ -18,8 +18,7 @@ import ru.dshirokov.reminder.telegramreminder.port.InteractionRepository;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-import static ru.dshirokov.reminder.telegramreminder.application.Triggers.from;
-import static ru.dshirokov.reminder.telegramreminder.application.Triggers.shouldTrigger;
+import static ru.dshirokov.reminder.telegramreminder.application.Triggers.*;
 import static ru.dshirokov.reminder.telegramreminder.application.dto.State.*;
 
 @Service
