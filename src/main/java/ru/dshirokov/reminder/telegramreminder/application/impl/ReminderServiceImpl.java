@@ -12,6 +12,7 @@ import ru.dshirokov.reminder.telegramreminder.application.entity.Interaction;
 import ru.dshirokov.reminder.telegramreminder.port.EventRepository;
 import ru.dshirokov.reminder.telegramreminder.port.InteractionRepository;
 
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -82,7 +83,7 @@ public class ReminderServiceImpl implements ReminderService {
 
     @Override
     public Mono<MessageConvertible> help() {
-        return Mono.just(new SimpleTextResponse("Создать событие /add\nСписок событий /list\nУдалить событие /remove"));
+        return Mono.just(new SimpleTextResponse("Новое событие /add\nВсе события /list\nУдалить событие /remove\nУстановленная временная зона /getzone\nУстановить врменную зону /setzone"));
     }
 
     @Override
@@ -98,7 +99,7 @@ public class ReminderServiceImpl implements ReminderService {
     public Mono<MessageConvertible> getTimeZone(Identifier identifier) {
         return interactionRepository
                 .findByIdOrNew(identifier.getChatId())
-                .map(interaction -> new SimpleTextResponse(interaction.getTimeZone()));
+                .map(interaction -> new SimpleTextResponse(Optional.ofNullable(interaction.getTimeZone()).orElse(DEFAULT_TIMEZONE)));
     }
 
     private Mono<MessageConvertible> setTimeZone(Interaction interaction, String text) {
@@ -118,7 +119,7 @@ public class ReminderServiceImpl implements ReminderService {
     private Mono<MessageConvertible> addEventTrigger(Interaction interaction, String text) {
         return eventRepository
                 .findById(interaction.getEventId())
-                .doOnSuccess(event -> event.setTrigger(from(text, interaction.getTimeZone())).setSuspended(Boolean.FALSE))
+                .doOnSuccess(event -> event.setTrigger(from(text, Optional.ofNullable(interaction.getTimeZone()).orElse(DEFAULT_TIMEZONE))).setSuspended(Boolean.FALSE))
                 .flatMap(eventRepository::save)
                 .then(interactionRepository.save(interaction.setState(PENDING)))
                 .then(Mono.just(new SimpleTextResponse("Спасибо, событие создано!")));

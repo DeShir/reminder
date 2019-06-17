@@ -12,6 +12,8 @@ import java.time.OffsetTime;
 @Slf4j
 public class Triggers {
 
+    public String DEFAULT_TIMEZONE = "+00:00";
+
     private final static long PADDING = 30;
 
     public Trigger from(String description) {
