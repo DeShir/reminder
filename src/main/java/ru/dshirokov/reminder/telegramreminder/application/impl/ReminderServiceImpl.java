@@ -6,11 +6,8 @@ import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import ru.dshirokov.reminder.telegramreminder.application.ReminderService;
-import ru.dshirokov.reminder.telegramreminder.application.TextConvertible;
-import ru.dshirokov.reminder.telegramreminder.application.dto.Alarm;
-import ru.dshirokov.reminder.telegramreminder.application.dto.Identifier;
-import ru.dshirokov.reminder.telegramreminder.application.dto.ListTextResponse;
-import ru.dshirokov.reminder.telegramreminder.application.dto.SimpleTextResponse;
+import ru.dshirokov.reminder.telegramreminder.application.MessageConvertible;
+import ru.dshirokov.reminder.telegramreminder.application.dto.*;
 import ru.dshirokov.reminder.telegramreminder.application.entity.Interaction;
 import ru.dshirokov.reminder.telegramreminder.port.EventRepository;
 import ru.dshirokov.reminder.telegramreminder.port.InteractionRepository;
@@ -31,7 +28,7 @@ public class ReminderServiceImpl implements ReminderService {
 
     @Override
     @Transactional
-    public Mono<TextConvertible> startAddingEvent(Identifier identifier) {
+    public Mono<MessageConvertible> startAddingEvent(Identifier identifier) {
         return interactionRepository
                 .findByIdOrNew(identifier.getChatId())
                 .filter(interaction -> PENDING.equals(interaction.getState()))
@@ -41,7 +38,7 @@ public class ReminderServiceImpl implements ReminderService {
     }
 
     @Override
-    public Mono<TextConvertible> startRemovingEvent(Identifier identifier) {
+    public Mono<MessageConvertible> startRemovingEvent(Identifier identifier) {
         return interactionRepository
                 .findByIdOrNew(identifier.getChatId())
                 .doOnSuccess(interaction -> interaction.setState(REMOVE_EVENT))
@@ -53,7 +50,7 @@ public class ReminderServiceImpl implements ReminderService {
     }
 
     @Override
-    public Mono<TextConvertible> list(Identifier identifier) {
+    public Mono<MessageConvertible> list(Identifier identifier) {
         return eventRepository
                 .findAllByChatId(identifier.getChatId())
                 .map(event -> String.format("%s - %s\n%s\n", event.getTrigger().getTime(), event.getTitle(), event.getId()))
@@ -61,7 +58,7 @@ public class ReminderServiceImpl implements ReminderService {
     }
 
     @Override
-    public Mono<TextConvertible> receive(Identifier identifier, String text) {
+    public Mono<MessageConvertible> receive(Identifier identifier, String text) {
         return interactionRepository
                 .findByIdOrNew(identifier.getChatId())
                 .flatMap(interaction -> {
@@ -69,6 +66,7 @@ public class ReminderServiceImpl implements ReminderService {
                         case ADD_EVENT_TITLE: return addEventTitle(interaction, text);
                         case ADD_EVENT_TRIGGER: return addEventTrigger(interaction, text);
                         case REMOVE_EVENT: return removeEvent(text);
+                        case START_SETTING_TIMEZONE: return setTimeZone(interaction, text);
                         case PENDING:
                         default: return Mono.empty();
                     }
@@ -83,11 +81,32 @@ public class ReminderServiceImpl implements ReminderService {
     }
 
     @Override
-    public Mono<TextConvertible> help() {
+    public Mono<MessageConvertible> help() {
         return Mono.just(new SimpleTextResponse("Создать событие /add\nСписок событий /list\nУдалить событие /remove"));
     }
 
-    private Mono<TextConvertible> addEventTitle(Interaction interaction, String text) {
+    @Override
+    public Mono<MessageConvertible> startSetTimeZone(Identifier identifier) {
+        return interactionRepository
+                .findByIdOrNew(identifier.getChatId())
+                .doOnSuccess(interaction -> interaction.setState(START_SETTING_TIMEZONE))
+                .flatMap(interactionRepository::save)
+                .then(Mono.just(new SimpleKeyboardResponse("timezones", "Часовой пояс?")));
+    }
+
+    @Override
+    public Mono<MessageConvertible> getTimeZone(Identifier identifier) {
+        return interactionRepository
+                .findByIdOrNew(identifier.getChatId())
+                .map(interaction -> new SimpleTextResponse(interaction.getTimeZone()));
+    }
+
+    private Mono<MessageConvertible> setTimeZone(Interaction interaction, String text) {
+        return interactionRepository.save(interaction.setTimeZone(text).setState(PENDING))
+                .then(Mono.just(new SimpleTextResponse("Временная зона установлена.")));
+    }
+
+    private Mono<MessageConvertible> addEventTitle(Interaction interaction, String text) {
         return eventRepository
                 .findById(interaction.getEventId())
                 .doOnSuccess(event -> event.setTitle(text))
@@ -96,16 +115,16 @@ public class ReminderServiceImpl implements ReminderService {
                 .then(Mono.just(new SimpleTextResponse("Время?")));
     }
 
-    private Mono<TextConvertible> addEventTrigger(Interaction interaction, String text) {
+    private Mono<MessageConvertible> addEventTrigger(Interaction interaction, String text) {
         return eventRepository
                 .findById(interaction.getEventId())
-                .doOnSuccess(event -> event.setTrigger(from(text)).setSuspended(Boolean.FALSE))
+                .doOnSuccess(event -> event.setTrigger(from(text, interaction.getTimeZone())).setSuspended(Boolean.FALSE))
                 .flatMap(eventRepository::save)
                 .then(interactionRepository.save(interaction.setState(PENDING)))
                 .then(Mono.just(new SimpleTextResponse("Спасибо, событие создано!")));
     }
 
-    private Mono<TextConvertible> removeEvent(String text) {
+    private Mono<MessageConvertible> removeEvent(String text) {
         return eventRepository
                 .findById(UUID.fromString(text))
                 .flatMap(eventRepository::delete)

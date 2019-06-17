@@ -12,4 +12,5 @@ public class Interaction {
     String id;
     State state;
     UUID eventId;
+    String timeZone;
 }

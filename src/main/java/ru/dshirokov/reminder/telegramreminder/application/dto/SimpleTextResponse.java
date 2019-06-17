@@ -1,15 +1,17 @@
 package ru.dshirokov.reminder.telegramreminder.application.dto;
 
 import lombok.AllArgsConstructor;
-import ru.dshirokov.reminder.telegramreminder.application.TextConvertible;
+import ru.dshirokov.reminder.telegramreminder.application.MessageConvertible;
+
+import java.util.Optional;
 
 @AllArgsConstructor
-public class SimpleTextResponse implements TextConvertible {
+public class SimpleTextResponse implements MessageConvertible {
 
     private final String message;
 
     @Override
-    public String text() {
-        return message;
+    public Optional<String> text() {
+        return Optional.of(message);
     }
 }

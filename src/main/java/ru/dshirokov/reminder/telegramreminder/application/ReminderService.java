@@ -6,10 +6,12 @@ import ru.dshirokov.reminder.telegramreminder.application.dto.Alarm;
 import ru.dshirokov.reminder.telegramreminder.application.dto.Identifier;
 
 public interface ReminderService {
-    Mono<TextConvertible> startAddingEvent(Identifier identifier);
-    Mono<TextConvertible> startRemovingEvent(Identifier identifier);
-    Mono<TextConvertible> list(Identifier identifier);
-    Mono<TextConvertible> receive(Identifier identifier, String text);
+    Mono<MessageConvertible> startAddingEvent(Identifier identifier);
+    Mono<MessageConvertible> startRemovingEvent(Identifier identifier);
+    Mono<MessageConvertible> list(Identifier identifier);
+    Mono<MessageConvertible> receive(Identifier identifier, String text);
     Flux<Alarm> alarms();
-    Mono<TextConvertible> help();
+    Mono<MessageConvertible> help();
+    Mono<MessageConvertible> startSetTimeZone(Identifier identifier);
+    Mono<MessageConvertible> getTimeZone(Identifier identifier);
 }

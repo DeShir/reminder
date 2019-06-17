@@ -15,6 +15,6 @@ public class Ticker {
 
     @Scheduled(cron = "0 * * * * *")
     public void tick() {
-        reminderService.alarms().subscribe(alarm -> telegramGate.send(Long.valueOf(alarm.getChatId()), alarm.getMessage().text()));
+        reminderService.alarms().subscribe(alarm -> telegramGate.send(Long.valueOf(alarm.getChatId()), alarm.getMessage()));
     }
 }
